@@ -1,0 +1,25 @@
+SELECT 
+    CategoryName, ProductName, CompanyName, Quantity, Total
+FROM
+    categories
+        RIGHT JOIN
+    (SELECT 
+        CategoryID,
+            SupplierID,
+            products.ProductName,
+            Quantity,
+            Total
+    FROM
+        products
+    RIGHT JOIN (SELECT 
+        ProductID,
+            SUM(Quantity) AS Quantity,
+            SUM((UnitPrice * Quantity) - Discount) AS Total
+    FROM
+        orders
+    LEFT JOIN orderdetails ON orders.OrderID = orderdetails.OrderID
+    WHERE
+        orders.OrderDate BETWEEN ? AND ?
+    GROUP BY orderdetails.ProductID) AS productdetails ON productdetails.ProductID = products.ProductID) AS salesdetails ON salesdetails.CategoryID = categories.CategoryID
+        LEFT JOIN
+    suppliers ON salesdetails.supplierID = suppliers.supplierID;

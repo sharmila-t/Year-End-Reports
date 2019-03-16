@@ -1,0 +1,18 @@
+SELECT 
+    CompanyName, Address, City, Region, PostalCode, Country, SUM(Quantity) as Quantity, SUM(Total) as Total
+FROM
+    products
+        RIGHT JOIN
+    (SELECT 
+        ProductID,
+            SUM(Quantity) AS Quantity,
+            SUM((UnitPrice * Quantity) - Discount) AS Total
+    FROM
+        orders
+    LEFT JOIN orderdetails ON orders.OrderID = orderdetails.OrderID
+    WHERE
+        orders.OrderDate BETWEEN ? AND ?
+    GROUP BY ProductID) AS salesdetails ON salesdetails.ProductID = products.ProductID
+        LEFT JOIN
+    suppliers ON products.SupplierID = suppliers.SupplierID
+    Group by products.SupplierID
