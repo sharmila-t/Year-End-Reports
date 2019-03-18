@@ -24,6 +24,7 @@ import northwind.MyIdentity;
 
 
 public class Main {
+	// XML DOM Object
 	static Document document;
 
 	public static void main(String args[]) throws Exception {
@@ -35,28 +36,31 @@ public class Main {
 		System.out.println("Output filename?");
 		String output = scan.nextLine();
 		scan.close();
-		
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		String URL = "jdbc:mysql://localhost:3306";
-        Properties id = new Properties();        
-        MyIdentity.setIdentity( id );
-        
-		Connection con = DriverManager.getConnection(URL, id.getProperty("user"), id.getProperty("pwd"));
-		
-		
+
 		document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element summary = document.createElement("year_end_summary");
 		document.appendChild(summary);
-		
+
 		Element year = document.createElement("year");
 		year.appendChild(createNode("start_date", StartDate));
 		year.appendChild(createNode("end_date", EndDate));
 		summary.appendChild(year);
 		
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		String URL = "jdbc:mysql://db.cs.dal.ca:3306";
+		
+		//Gets and sets username and password from properties file
+		Properties id = new Properties();        
+		MyIdentity.setIdentity( id );
+		
+		// Connection String
+		Connection con = DriverManager.getConnection(URL, id.getProperty("user"), id.getProperty("pwd"));
+
 		try {
 			Statement stmt = con.createStatement();
 			stmt.executeQuery("USE "+ id.getProperty("database"));
-
+			
+			// Customer summary
 			String cus_query = new String(Files.readAllBytes(Paths.get("customer.txt")), "UTF-8");
 			PreparedStatement customer=con.prepareStatement(cus_query);  
 			customer.setDate(1, java.sql.Date.valueOf(StartDate));
@@ -64,15 +68,15 @@ public class Main {
 			ResultSet cus_report = customer.executeQuery();
 			CreateCustomerObject(cus_report, summary);
 
-
+			// Product summary by category
 			String product_query = new String(Files.readAllBytes(Paths.get("product.txt")), "UTF-8");
 			PreparedStatement product=con.prepareStatement(product_query);  
 			product.setDate(1, java.sql.Date.valueOf(StartDate));
 			product.setDate(2, java.sql.Date.valueOf(EndDate));
 			ResultSet pdt_report = product.executeQuery();
 			CreateProductObject(pdt_report, summary);
-			
-			
+
+			// Supplier summary
 			String supplier_query = new String(Files.readAllBytes(Paths.get("supplier.txt")), "UTF-8");
 			PreparedStatement supplier=con.prepareStatement(supplier_query);  
 			supplier.setDate(1, java.sql.Date.valueOf(StartDate));
@@ -82,10 +86,8 @@ public class Main {
 
 			writeToXML(output);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			con.close();
@@ -93,11 +95,11 @@ public class Main {
 	}
 
 
-
+	// Constructs XML object from  product resultset
 	public static void CreateProductObject(ResultSet result, Element summary) throws Exception{
 		Map<String, Element> categoryMap= new HashMap<String, Element>();
 		Element productList = document.createElement("product_list");
-
+		
 		while (result.next()) {
 			Element productNode = document.createElement("product");
 			productNode.appendChild(createNode("product_name", result.getString("ProductName")));
@@ -118,11 +120,12 @@ public class Main {
 			}
 
 		}
-
+		
+		//appending to summary list
 		summary.appendChild(productList);
 	}
 
-
+	// Constructs XML object from  customer resultset
 	public static void CreateCustomerObject(ResultSet result, Element summary) throws Exception {
 		Element root = document.createElement("customer_list");
 
@@ -137,7 +140,8 @@ public class Main {
 
 		summary.appendChild(root);
 	}
-	
+
+	// Constructs XML object from  product resultset
 	public static void CreateSupplierObject(ResultSet result, Element summary) throws Exception {
 		Element root = document.createElement("supplier_list");
 
@@ -153,7 +157,7 @@ public class Main {
 		summary.appendChild(root);
 	}
 
-	
+	// Constructs XML object in typical address format
 	static Element createAdressNode(ResultSet result) throws DOMException, SQLException {
 		Element address = document.createElement("address");			
 		address.appendChild(createNode("street_address", result.getString("Address")));
@@ -164,12 +168,14 @@ public class Main {
 		return address;
 	}
 	
+	// Creates a XML data Node
 	static Element createNode(String nodeName, String value) {
 		Element Node = document.createElement(nodeName);
 		Node.setTextContent(value);
 		return Node;
 	}
-
+	
+	// Writes output to given XML file
 	public static void writeToXML(String output) throws Exception {
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();

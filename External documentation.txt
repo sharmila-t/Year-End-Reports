@@ -1,0 +1,27 @@
+Assignment5
+	Generates and Exports entity (product, customer, supplier) wise periodical summary report for northwind food distribution company  as XML file.
+
+
+Data Structures
+-> Map - To group list of products by category.
+
+Class
+-> Main - Generates Summary in XML formal for given period
+-> MyIdentity - Contains properties to be used in connection string
+
+Methods
+-> CreateProductObject- Generates product wise summary for given period
+-> CreateCustomerObject -  Generates Customer based summary for given period
+-> CreateSupplierObject - Generates Supplier wise summary for given period
+-> writeToXML - Writes the generated summary as XML file using javax transformer.
+
+-> setIdentity - Sets the user identity for MySQL authentication.
+
+Argument
+
+The  provided solution has each layer implemented separately. Queries are been kept in separate files so as to separate
+data handling and optimization from rest of the logic. This in order gives a clear and wide space to implement the business logic
+and interface design.
+
+Properties file is also been implemented separately which has all the necessary configurations.  This kind of approach which
+most of companies follow in real time makes it fit to be deployed in production.
