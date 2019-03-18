@@ -35,23 +35,8 @@ WHERE
 c.  What are the sales by region (in dollar values) for 1997?
 */
 
-/* sales by customer region */
-SELECT 
-    IF(Region IS NULL, 'Others', Region) AS Region,
-    SUM(salesdetails.Total) AS Sales
-FROM
-    (SELECT 
-        customerID, ((UnitPrice * Quantity) - Discount) AS Total
-    FROM
-        orders
-    LEFT JOIN orderdetails ON orders.OrderID = orderdetails.OrderID
-    WHERE
-        YEAR(orders.OrderDate) = 1997) AS salesdetails
-        LEFT JOIN
-    customers ON salesdetails.customerID = customers.customerID
-GROUP BY customers.Region;
-
 /* sales by store region */
+
 SELECT 
     region.RegionDescription AS Region,
     SUM(salesdetails.Total) AS Sales
@@ -81,17 +66,18 @@ SELECT
     suppliers.*
 FROM
     suppliers
-        RIGHT JOIN
-    (SELECT DISTINCT
+        INNER JOIN
+    (SELECT 
         SupplierID
     FROM
         products
-    RIGHT JOIN (SELECT 
-        COUNT(OrderID) AS OrderCount, ProductID
+    INNER JOIN (SELECT 
+        COUNT(OrderID) AS OrderCount, orderdetails.ProductID
     FROM
         orderdetails
     GROUP BY ProductID) AS ordercountdetails ON products.ProductID = ordercountdetails.ProductID
-    ORDER BY OrderCount DESC
+    GROUP BY SupplierID
+    ORDER BY MAX(OrderCount) DESC
     LIMIT 5) AS topsuppliers ON suppliers.SupplierID = topsuppliers.SupplierID;
     
 /*

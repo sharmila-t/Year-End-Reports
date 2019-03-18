@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Scanner;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -18,19 +20,28 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import northwind.MyIdentity;
+
 
 public class Main {
 	static Document document;
 
 	public static void main(String args[]) throws Exception {
-		String StartDate = "1996-01-01";
-		String EndDate = "1996-08-01";
+		Scanner scan = new Scanner(System.in);
+		System.out.println("Start date?");
+		String StartDate = scan.nextLine();
+		System.out.println("End date?");
+		String EndDate = scan.nextLine();
+		System.out.println("Output filename?");
+		String output = scan.nextLine();
+		scan.close();
 		
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		String URL = "jdbc:mysql://localhost:3306";
-		String user = "root";
-		String pwd = "root";
-		Connection con = DriverManager.getConnection(URL, user, pwd);
+        Properties id = new Properties();        
+        MyIdentity.setIdentity( id );
+        
+		Connection con = DriverManager.getConnection(URL, id.getProperty("user"), id.getProperty("pwd"));
 		
 		
 		document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -44,7 +55,7 @@ public class Main {
 		
 		try {
 			Statement stmt = con.createStatement();
-			stmt.executeQuery("USE class_3901;");
+			stmt.executeQuery("USE "+ id.getProperty("database"));
 
 			String cus_query = new String(Files.readAllBytes(Paths.get("customer.txt")), "UTF-8");
 			PreparedStatement customer=con.prepareStatement(cus_query);  
@@ -69,7 +80,7 @@ public class Main {
 			ResultSet supplier_report = supplier.executeQuery();
 			CreateSupplierObject(supplier_report, summary);
 
-			writeToXML();
+			writeToXML(output);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -159,11 +170,11 @@ public class Main {
 		return Node;
 	}
 
-	public static void writeToXML() throws Exception {
+	public static void writeToXML(String output) throws Exception {
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
 		DOMSource domSource = new DOMSource(document);
-		StreamResult streamResult = new StreamResult(new File("output.xml"));
+		StreamResult streamResult = new StreamResult(new File(output));
 		transformer.transform(domSource, streamResult);
 	}
 }
