@@ -17,3 +17,5 @@ The generated output will be of the format
 	</entity_list>
 </year_end_summary>
 ```
+
+Refer developer [Wiki](https://github.com/sharmila-t/Year-End-Reports/wiki) for more explanation.
